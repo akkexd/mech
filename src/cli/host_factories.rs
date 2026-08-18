@@ -9,6 +9,10 @@ use mech_scene::NativeSceneHostFactory;
 use mech_terminal::CliHostFactory;
 #[cfg(feature = "time_host_native")]
 use mech_time::NativeTimeHostFactory;
+#[cfg(feature = "lidar_host_native")]
+use mech_lidar::NativeLidarHostFactory;
+#[cfg(feature = "lidar_host_mock")]
+use mech_lidar::MockLidarHostFactory;
 #[cfg(feature = "timer_host_native")]
 use mech_timer::NativeTimerHostFactory;
 
@@ -34,6 +38,21 @@ pub fn register_cli_host_factories(
         builder = builder.host_factory(Box::new(timer_factory))?;
     }
 
+    #[cfg(feature = "lidar_host_native")]
+    {
+        let lidar_factory = NativeLidarHostFactory::new()?;
+        providers.insert(lidar_factory.provider_name().to_string());
+        builder = builder.host_factory(Box::new(lidar_factory))?;
+    }
+
+    #[cfg(feature = "lidar_host_mock")]
+    {
+        let mock_factory = MockLidarHostFactory::new()?;
+        providers.insert(mock_factory.provider_name().to_string());
+        builder = builder.host_factory(Box::new(mock_factory))?;
+    }
+
+   
     #[cfg(feature = "console_host_native")]
     {
         let console_factory = NativeConsoleHostFactory::new()?;

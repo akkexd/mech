@@ -144,6 +144,8 @@ async = []
 trace = ["mech-engine/trace"]
 dynamic-modules = ["mech-engine/dynamic-modules"]
 time_host_native = ["dep:mech-time", "mech-time/native"]
+lidar_host_native = ["dep:mech-lidar", "mech-lidar/native"]
+lidar_host_mock   = ["dep:mech-lidar", "mech-lidar/mock"]
 time_host_browser = ["dep:mech-time", "mech-time/browser"]
 console_host_native = ["dep:mech-console", "mech-console/native"]
 console_host_browser = ["dep:mech-console", "mech-console/browser"]
@@ -397,6 +399,7 @@ mech-build = { version = "0.3.5", default-features = false, optional = true }
 mech-browser = { version = "0.3.5", default-features = false, optional = true }
 mech-terminal = { version = "0.3.5", default-features = false, optional = true }
 mech-time = { version = "0.3.5", path = "hosts/time", default-features = false, optional = true }
+mech-lidar = { version = "0.3.5", path = "hosts/lidar", default-features = false, optional = true }
 mech-console = { version = "0.3.5", path = "hosts/console", default-features = false, optional = true }
 mech-timer = { version = "0.3.5", path = "hosts/timer", default-features = false, optional = true }
 mech-scene = { version = "0.3.5", path = "hosts/scene", default-features = false, optional = true }
@@ -444,6 +447,7 @@ members = [
   "hosts/console",
   "hosts/robot-arm",
   "hosts/time",
+  "hosts/lidar",
   "hosts/timer",
   "hosts/scene",
   "tests/fixtures/native-live-host",
@@ -469,6 +473,7 @@ mech-browser = { path = 'hosts/browser'}
 mech-terminal = { path = 'hosts/terminal'}
 mech-robot-arm = { path = 'hosts/robot-arm'}
 mech-time = { path = 'hosts/time'}
+mech-lidar = { path = 'hosts/lidar'}
 mech-console = { path = 'hosts/console'}
 mech-timer = { path = 'hosts/timer'}
 mech-scene = { path = 'hosts/scene'}
