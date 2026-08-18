@@ -5,15 +5,19 @@ pub mod snapshot;
 
 #[cfg(feature = "native")]
 pub mod native;
+#[cfg(feature = "mock")]
+pub mod native_mock;
 
+#[cfg(feature = "mock")]
+pub use native_mock::{MockLidarHostFactory, MockLidarInputDriver};
 pub use config::{lidar_settings_from_config, LidarHostSettings};
 pub use module::{lidar_host_manifest, LIDAR_HOST_MCFG};
 pub use provider::LidarResourceProvider;
 pub use snapshot::{
-    lidar_input_base_uri, lidar_source_matches, new_shared_snapshot, LidarSnapshot,
-    SharedLidarSnapshot, SCAN_PATHS,
+    lidar_input_base_uri, lidar_source_matches, new_shared_snapshot,
+    reduce_scan_points, sector_bearing_rad, scan_paths,
+    LidarSnapshot, SharedLidarSnapshot, N_SECTORS,
 };
-
 #[cfg(feature = "native")]
 pub use native::{NativeLidarHostFactory, NativeLidarInputDriver};
 

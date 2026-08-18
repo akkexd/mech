@@ -1,7 +1,12 @@
+// hosts/lidar/src/provider.rs
+
 use mech_core::{MResult, Ref, Value};
 use mech_runtime::{RuntimeResourceProvider, RuntimeResourceReadRequest};
 
-use crate::{lidar_error, lidar_input_base_uri, LidarSnapshot, SharedLidarSnapshot};
+use crate::{
+    lidar_error, lidar_input_base_uri, sector_bearing_rad, LidarSnapshot,
+    SharedLidarSnapshot, N_SECTORS,
+};
 
 #[derive(Debug)]
 pub struct LidarResourceProvider {
@@ -26,10 +31,27 @@ impl LidarResourceProvider {
             "count" => snapshot.count,
             "scan-id" => snapshot.scan_id,
             other => {
+                // Try to match sector-N-bearing or sector-N-range
+                if let Some(rest) = other.strip_prefix("sector-") {
+                    if let Some((idx_str, kind)) = rest.split_once('-') {
+                        if let Ok(idx) = idx_str.parse::<usize>() {
+                            if idx < N_SECTORS {
+                                return Ok(Value::F64(Ref::new(match kind {
+                                    "bearing" => sector_bearing_rad(idx),
+                                    "range"   => snapshot.sector_ranges_m[idx],
+                                    _ => return Err(lidar_error(
+                                        "LidarResourceProvider",
+                                        format!("unknown lidar path `{other}`"),
+                                    )),
+                                })));
+                            }
+                        }
+                    }
+                }
                 return Err(lidar_error(
                     "LidarResourceProvider",
-                    format!("unknown path `{other}`"),
-                ))
+                    format!("unknown lidar path `{other}`"),
+                ));
             }
         };
         Ok(Value::F64(Ref::new(value)))

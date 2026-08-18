@@ -1,0 +1,50 @@
+config := {
+  hosts: [
+    {
+      name: "front"
+      provider: "lidar"
+      settings: {
+        port: "/dev/ttyUSB0"
+        baud: 115200
+        interval-ms: 100
+        points-per-scan: 360
+      }
+    }
+    { name: "console" provider: "console" settings: {} }
+  ]
+
+  run: {
+    paths: ["ekf-lidar.mec"]
+
+    grants: [
+      {
+        target: "front/scan"
+        operations: ["read"]
+        paths: [
+          "scan-id",
+          "sector-0-bearing",  "sector-0-range",
+          "sector-1-bearing",  "sector-1-range",
+          "sector-2-bearing",  "sector-2-range",
+          "sector-3-bearing",  "sector-3-range",
+          "sector-4-bearing",  "sector-4-range",
+          "sector-5-bearing",  "sector-5-range",
+          "sector-6-bearing",  "sector-6-range",
+          "sector-7-bearing",  "sector-7-range",
+          "sector-8-bearing",  "sector-8-range",
+          "sector-9-bearing",  "sector-9-range",
+          "sector-10-bearing", "sector-10-range",
+          "sector-11-bearing", "sector-11-range",
+          "sector-12-bearing", "sector-12-range",
+          "sector-13-bearing", "sector-13-range",
+          "sector-14-bearing", "sector-14-range",
+          "sector-15-bearing", "sector-15-range"
+        ]
+      }
+      {
+        target: "console/output"
+        operations: ["write"]
+        paths: ["line"]
+      }
+    ]
+  }
+}

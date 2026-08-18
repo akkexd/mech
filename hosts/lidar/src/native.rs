@@ -19,8 +19,8 @@ use crate::{
     new_shared_snapshot, LidarHostSettings, LidarResourceProvider, LidarSnapshot,
     SharedLidarSnapshot,
 };
+use crate::snapshot::reduce_scan_points;
 
-//type LidarDev = RplidarDevice<Box<dyn SerialPort>>;
 type LidarDev = RplidarDevice<dyn SerialPort>;
 type SharedDevice = Arc<Mutex<LidarDev>>;
 
@@ -53,59 +53,46 @@ fn open_device(settings: &LidarHostSettings) -> MResult<SharedDevice> {
     for _ in 0..20 {
         dev.grab_scan_point().ok();
     }
-
     Ok(Arc::new(Mutex::new(dev)))
 }
 
+/// Read one reduced snapshot from the RPLIDAR.
+///
+/// Collects raw (angle_deg, range_mm, quality) tuples from the device,
+/// then delegates to `snapshot::reduce_scan_points` which fills both the
+/// summary scalars (nearest, front, count) and the 16 sector ranges used
+/// by the EKF broadcast.
 fn read_snapshot(dev: &SharedDevice, points: usize, scan_id: u64) -> MResult<LidarSnapshot> {
     let mut guard = dev.lock()
         .map_err(|_| lidar_error("LidarRead", "device lock poisoned"))?;
 
-    let mut nearest = f64::INFINITY;
-    let mut nearest_angle = 0.0_f64;
-    let mut front = f64::INFINITY;
-    let mut valid = 0.0_f64;
-    let mut timeouts = 0;
+    let mut raw: Vec<(f64, f64, u8)> = Vec::with_capacity(points);
+    let mut timeouts = 0u32;
 
     for _ in 0..points {
         match guard.grab_scan_point() {
             Ok(p) => {
-                if p.quality == 0 { continue; }
-                let dist_mm = (p.distance() as f64) * 1000.0;
                 let angle_deg = (p.angle() as f64) * 180.0 / std::f64::consts::PI;
-                if dist_mm <= 0.0 { continue; }
-                valid += 1.0;
+                let range_mm  = (p.distance() as f64) * 1000.0;
+                raw.push((angle_deg, range_mm, p.quality));
                 timeouts = 0;
-                if dist_mm < nearest {
-                    nearest = dist_mm;
-                    nearest_angle = angle_deg;
-                }
-                let ahead = angle_deg <= 10.0 || angle_deg >= 350.0;
-                if ahead && dist_mm < front {
-                    front = dist_mm;
-                }
             }
             Err(_) => {
                 timeouts += 1;
                 if timeouts >= 3 {
-                    // Scan stream died — restart it
+                    // Scan stream died — restart it and give up on this batch.
+                    // The next call will get a fresh sweep.
                     guard.stop().ok();
                     std::thread::sleep(Duration::from_millis(100));
                     guard.start_scan().ok();
                     std::thread::sleep(Duration::from_millis(300));
-                    timeouts = 0;
+                    break;
                 }
             }
         }
     }
 
-    Ok(LidarSnapshot {
-        nearest_mm: if nearest.is_finite() { nearest } else { 0.0 },
-        nearest_angle,
-        front_mm: if front.is_finite() { front } else { 0.0 },
-        count: valid,
-        scan_id: scan_id as f64,
-    })
+    Ok(reduce_scan_points(raw, scan_id))
 }
 
 struct WorkerLiveReset(Arc<AtomicBool>);
