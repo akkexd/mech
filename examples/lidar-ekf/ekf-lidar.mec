@@ -2,47 +2,14 @@
 
 @out := console://console/output{:write(line)}
 
-@scan := lidar://front/scan{:read(scan-id), :read(sector-0-bearing), :read(sector-0-range), :read(sector-1-bearing), :read(sector-1-range), :read(sector-2-bearing), :read(sector-2-range), :read(sector-3-bearing), :read(sector-3-range), :read(sector-4-bearing), :read(sector-4-range), :read(sector-5-bearing), :read(sector-5-range), :read(sector-6-bearing), :read(sector-6-range), :read(sector-7-bearing), :read(sector-7-range), :read(sector-8-bearing), :read(sector-8-range), :read(sector-9-bearing), :read(sector-9-range), :read(sector-10-bearing), :read(sector-10-range), :read(sector-11-bearing), :read(sector-11-range), :read(sector-12-bearing), :read(sector-12-range), :read(sector-13-bearing), :read(sector-13-range), :read(sector-14-bearing), :read(sector-14-range), :read(sector-15-bearing), :read(sector-15-range)}
+@scan := lidar://front/scan{:read(scan-id), :read(sector-0-range), :read(sector-4-range), :read(sector-8-range), :read(sector-12-range)}
 
-bearings := [@scan/sector-0-bearing @scan/sector-1-bearing @scan/sector-2-bearing @scan/sector-3-bearing @scan/sector-4-bearing @scan/sector-5-bearing @scan/sector-6-bearing @scan/sector-7-bearing @scan/sector-8-bearing @scan/sector-9-bearing @scan/sector-10-bearing @scan/sector-11-bearing @scan/sector-12-bearing @scan/sector-13-bearing @scan/sector-14-bearing @scan/sector-15-bearing]
+sid := @scan/scan-id
+r0  := @scan/sector-0-range
+r4  := @scan/sector-4-range
+r8  := @scan/sector-8-range
+r12 := @scan/sector-12-range
 
-ranges := [@scan/sector-0-range @scan/sector-1-range @scan/sector-2-range @scan/sector-3-range @scan/sector-4-range @scan/sector-5-range @scan/sector-6-range @scan/sector-7-range @scan/sector-8-range @scan/sector-9-range @scan/sector-10-range @scan/sector-11-range @scan/sector-12-range @scan/sector-13-range @scan/sector-14-range @scan/sector-15-range]
-
-dt := 0.1
-
-~x-est := [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-~y-est := [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-~theta-est := [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-
-u-v := 0.1
-u-omega := 0.2
-
-theta := theta-est
-x-pred := x-est + u-v * math/cos(theta) * dt
-y-pred := y-est + u-v * math/sin(theta) * dt
-theta-pred := theta-est + u-omega * dt
-
-landmark-x := x-pred + ranges * math/cos(bearings)
-landmark-y := y-pred + ranges * math/sin(bearings)
-
-dx := landmark-x - x-pred
-dy := landmark-y - y-pred
-
-predicted-bearing := math/atan2(dy, dx) - theta-pred
-
-innovation := bearings - predicted-bearing
-
-K := 0.05
-
-x-est = x-pred
-y-est = y-pred
-theta-est = theta-pred + K * innovation
-
-s1 := theta-est[1]
-s5 := theta-est[5]
-s9 := theta-est[9]
-s13 := theta-est[13]
-
-readout := [s1 s5 s9 s13]
+readout := [sid r0 r4 r8 r12]
 
 @out/line <- readout
